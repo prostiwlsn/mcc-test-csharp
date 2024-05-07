@@ -28,6 +28,14 @@ class Program
         // Petr: 2
         // Elena: 3
 
+        var firstQuery = context.BlogComments
+            .GroupBy(comment => comment.UserName)
+            .Select(group => new { name = group.Key, count = group.Count()})
+            .ToList();
+
+        foreach (var item in firstQuery)
+            Console.WriteLine(item.name + " " + item.count);
+
         Console.WriteLine("Posts ordered by date of last comment. Result should include text of last comment:");
         //ToDo: write a query and dump the data to console
         // Expected result (format could be different, e.g. object serialized to JSON is ok):
@@ -35,6 +43,22 @@ class Program
         // Post1: '2020-03-05', '8'
         // Post3: '2020-02-14', '9'
 
+        var secondQuery = context.BlogPosts
+            .Select(post => new { 
+                name = post.Title, 
+                lastComment = post.Comments.OrderByDescending(comment => comment.CreatedDate).First()
+            })
+            .Select(post => new
+            {
+                post.name,
+                lastCommentDate = post.lastComment.CreatedDate,
+                lastCommentText = post.lastComment.Text
+            })
+            .OrderByDescending(post => post.lastCommentDate)
+            .ToList();
+
+        foreach (var item in secondQuery)
+            Console.WriteLine(item.name + " " + item.lastCommentDate.ToShortDateString() + " " + item.lastCommentText);
 
         Console.WriteLine("How many last comments each user left:");
         // 'last comment' is the latest Comment in each Post
@@ -43,7 +67,16 @@ class Program
         // Ivan: 2
         // Petr: 1
 
-            
+        var thirdQuery = context.BlogPosts
+            .Select(post => post.Comments
+                .OrderByDescending(comment => comment.CreatedDate).First())
+            .GroupBy(comment => comment.UserName)
+            .Select(group => new { name = group.Key, count = group.Count() })
+            .ToList();
+
+        foreach (var item in thirdQuery)
+            Console.WriteLine(item.name + " " + item.count);
+
         // Console.WriteLine(
         //     JsonSerializer.Serialize(BlogService.NumberOfCommentsPerUser(context)));
         // Console.WriteLine(
